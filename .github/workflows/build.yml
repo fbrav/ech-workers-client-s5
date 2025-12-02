@@ -1,0 +1,75 @@
+name: Build and Release
+
+permissions:
+  contents: write
+  actions: read
+  checks: read
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build Windows GUI Application
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up MinGW for Windows
+      uses: egor-tensin/setup-mingw@v2
+      with:
+        platform: x64
+        version: 11.2.0
+        
+    - name: Check MinGW installation
+      run: |
+        gcc --version
+        windres --version
+        
+    - name: Compile resource file
+      shell: cmd
+      run: windres resource.rc -o resource.o
+      
+    - name: Compile main.c
+      shell: cmd
+      run: |
+        gcc -Wall -Wextra -std=c99 -finput-charset=UTF-8 -fexec-charset=GBK -Os -s -o ech-workers-gui.exe resource.o main.c -luser32 -lkernel32 -lcomctl32 -lgdi32 -mwindows
+        
+    - name: Verify executable (修复语法错误)
+      shell: cmd
+      run: |
+        echo "=== Verifying build ==="
+        dir *.exe
+        
+        if not exist ech-workers-gui.exe (
+          echo "ERROR: ech-workers-gui.exe not found!"
+          exit /b 1
+        )
+        
+        echo "File size:"
+        for %%i in (ech-workers-gui.exe) do echo %%~zi bytes
+        echo "✅ Build successful!"
+        
+    - name: Create release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ech-workers-gui.exe
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+        name: "Release ${{ github.ref_name }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload artifact (non-tag builds)
+      if: success() && !startsWith(github.ref, 'refs/tags/v')
+      uses: actions/upload-artifact@v4
+      with:
+        name: ech-workers-gui
+        path: ech-workers-gui.exe
