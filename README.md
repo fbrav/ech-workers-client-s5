@@ -13,11 +13,10 @@
 
 ## 下载与使用
 
-从 [Releases](https://github.com/duquancai/ech-workers/releases) 页面下载最新版本。<br>
-ech-win.exe 和 _worker.js <br>
+从 [Releases](https://github.com/duquancai/ech-workers/releases) 页面下载最新版本：ech-win.exe 和 _worker.js。<br>
 ech-win.exe文件与本图形用户界面ech-workers-gui.exe文件存放于一个文件夹内。<br>
 只需要运行图形用户界面ech-workers-gui.exe文件即可。<br>
-_worker.js用于CF上进行部署，workers、pages、snippets三种部署都使用。<br>
+_worker.js用于CF上进行部署，workers、pages、snippets三种部署都适用。<br>
 
 ## 构建
 
