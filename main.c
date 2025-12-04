@@ -15,8 +15,8 @@
 typedef BOOL (WINAPI *SetProcessDPIAwareFunc)(void);
 
 // 版本信息
-#define APP_VERSION "1.0"
-#define APP_TITLE "ECH Workers 客户端 v" APP_VERSION
+#define APP_VERSION "1.1"
+#define APP_TITLE "ech win 客户端 v" APP_VERSION
 
 // 缓冲区大小定义
 #define MAX_URL_LEN 8192
@@ -836,7 +836,7 @@ void CreateControls(HWND hwnd) {
 
     int col2X = margin + Scale(15) + halfW + midGap;
 
-    CreateLabelAndEdit(hwnd, "身份令牌:", margin + Scale(15), innerY, groupW - Scale(30), editH, ID_TOKEN_EDIT, &hTokenEdit, FALSE);
+    CreateLabelAndEdit(hwnd, "TOKEN:", margin + Scale(15), innerY, groupW - Scale(30), editH, ID_TOKEN_EDIT, &hTokenEdit, FALSE);
     innerY += lineHeight + lineGap;
 
     // 调整布局：交换“反代IP(域名)”和“优选IP(域名)”的位置
@@ -1020,7 +1020,7 @@ void RenameCurrentServer() {
     SaveConfig();
     
     char logMsg[512];
-    sprintf(logMsg, "[系统] 服务器已重命名: %s -> %s\r\n", oldName, newName);
+    snprintf(logMsg, sizeof(logMsg), "[系统] 服务器已重命名: %s -> %s\r\n", oldName, newName);
     AppendLog(logMsg);
 }
 
@@ -1101,7 +1101,8 @@ void StartProcess() {
     HANDLE hRead, hWrite;
     if (!CreatePipe(&hRead, &hWrite, &sa, 0)) return;
 
-    STARTUPINFO si = { sizeof(si) };
+    STARTUPINFO si = {0}; // 修复警告：显式初始化所有字段
+    si.cb = sizeof(si);
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.hStdOutput = hWrite;
     si.hStdError = hWrite;
@@ -1120,14 +1121,14 @@ void StartProcess() {
         EnableWindow(hServerCombo, FALSE);
         
         char logMsg[512];
-        sprintf(logMsg, "[系统] 已启动服务器: %s\r\n", cfg->name);
+        snprintf(logMsg, sizeof(logMsg), "[系统] 已启动服务器: %s\r\n", cfg->name); // 修复格式化字符串
         AppendLog(logMsg);
     } else {
         CloseHandle(hRead);
         CloseHandle(hWrite);
         
         char errMsg[512];
-        snprintf(errMsg, sizeof(errMsg), "[错误] 启动失败，错误代码: %d\r\n", GetLastError());
+        snprintf(errMsg, sizeof(errMsg), "[错误] 启动失败，错误代码: %lu\r\n", GetLastError()); // 修复格式化字符串
         AppendLog(errMsg);
     }
 }
@@ -1205,6 +1206,14 @@ DWORD WINAPI LogReaderThread(LPVOID lpParam) {
 
 void AppendLog(const char* text) {
     if (!IsWindow(hLogEdit)) return;
+    int currentLen = GetWindowTextLength(hLogEdit);
+    if (currentLen > 80000) {
+        SendMessage(hLogEdit, WM_SETREDRAW, FALSE, 0);
+        SendMessage(hLogEdit, EM_SETSEL, 0, 32000);
+        SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)"");
+        SendMessage(hLogEdit, WM_SETREDRAW, TRUE, 0);
+        InvalidateRect(hLogEdit, NULL, TRUE);
+    }
     int len = GetWindowTextLength(hLogEdit);
     SendMessage(hLogEdit, EM_SETSEL, len, len);
     SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)text);
