@@ -66,7 +66,9 @@ int Scale(int x) {
 #define ID_IP_EDIT          1007
 #define ID_DNS_EDIT         1008
 #define ID_ECH_EDIT         1009
-#define ID_PYIP_EDIT        1010
+#define ID_GLOBEPROXY_EDIT  1010
+#define ID_SOCKS5_EDIT     1011
+#define ID_HTTP_EDIT        1012
 #define ID_START_BTN        1013
 #define ID_STOP_BTN         1014
 #define ID_CLEAR_LOG_BTN    1015
@@ -76,7 +78,7 @@ int Scale(int x) {
 // 全局变量
 HWND hMainWindow;
 HWND hServerCombo;
-HWND hServerEdit, hListenEdit, hTokenEdit, hIpEdit, hDnsEdit, hEchEdit, hPyipEdit;
+HWND hServerEdit, hListenEdit, hTokenEdit, hIpEdit, hDnsEdit, hEchEdit, hGlobeproxyEdit,hSocks5Edit,hHttpEdit;
 HWND hStartBtn, hStopBtn, hLogEdit;
 HWND hAutoStartCheck;
 PROCESS_INFORMATION processInfo;
@@ -98,7 +100,9 @@ typedef struct {
     char ip[MAX_SMALL_LEN];      
     char listen[MAX_SMALL_LEN];  
     char token[MAX_URL_LEN];
-    char pyip[MAX_SMALL_LEN];
+    char globeproxy[MAX_SMALL_LEN];
+    char socks5[MAX_SMALL_LEN];
+    char http[MAX_SMALL_LEN];
 } ServerConfig;
 
 // 全局服务器配置数组
@@ -840,8 +844,12 @@ void CreateControls(HWND hwnd) {
     innerY += lineHeight + lineGap;
 
     CreateLabelAndEdit(hwnd, "优选IP(域名):", margin + Scale(15), innerY, halfW, editH, ID_IP_EDIT, &hIpEdit, FALSE);
-    CreateLabelAndEdit(hwnd, "反代IP(域名):", col2X, innerY, halfW, editH, ID_PYIP_EDIT, &hPyipEdit, FALSE);
+    CreateLabelAndEdit(hwnd, "反代IP(域名):", col2X, innerY, halfW, editH, ID_GLOBEPROXY_EDIT, &hGlobeproxyEdit, FALSE);
     innerY += lineHeight + lineGap;
+
+    CreateLabelAndEdit(hwnd, "SOCKS5:", margin + Scale(15), innerY, halfW, editH, ID_SOCKS5_EDIT, &hSocks5Edit, FALSE);
+    CreateLabelAndEdit(hwnd, "HTTP:", col2X, innerY, halfW, editH, ID_HTTP_EDIT, &hHttpEdit, FALSE);
+    innerY += lineHeight + lineGap;    
 
     CreateLabelAndEdit(hwnd, "ECH域名:", margin + Scale(15), innerY, halfW, editH, ID_ECH_EDIT, &hEchEdit, FALSE);
     CreateLabelAndEdit(hwnd, "DOH服务器:", col2X, innerY, halfW, editH, ID_DNS_EDIT, &hDnsEdit, FALSE);
@@ -902,7 +910,9 @@ void InitDefaultServer() {
     strcpy(servers[0].ip, "");
     strcpy(servers[0].dns, "");
     strcpy(servers[0].ech, "");
-    strcpy(servers[0].pyip, "");
+    strcpy(servers[0].globeproxy, "");
+    strcpy(servers[0].socks5, "");
+    strcpy(servers[0].http, "");
 }
 
 void RefreshServerCombo() {
@@ -1042,7 +1052,9 @@ void GetControlValues() {
 
     GetWindowText(hTokenEdit, cfg->token, sizeof(cfg->token));
     GetWindowText(hIpEdit, cfg->ip, sizeof(cfg->ip));
-    GetWindowText(hPyipEdit, cfg->pyip, sizeof(cfg->pyip));
+    GetWindowText(hGlobeproxyEdit, cfg->globeproxy, sizeof(cfg->globeproxy));
+    GetWindowText(hSocks5Edit, cfg->socks5, sizeof(cfg->socks5));
+    GetWindowText(hHttpEdit, cfg->http, sizeof(cfg->http));    
     GetWindowText(hDnsEdit, cfg->dns, sizeof(cfg->dns));
     GetWindowText(hEchEdit, cfg->ech, sizeof(cfg->ech));
 }
@@ -1053,7 +1065,9 @@ void SetControlValues() {
     SetWindowText(hListenEdit, cfg->listen);
     SetWindowText(hTokenEdit, cfg->token);
     SetWindowText(hIpEdit, cfg->ip);
-    SetWindowText(hPyipEdit, cfg->pyip);
+    SetWindowText(hGlobeproxyEdit, cfg->globeproxy);
+    SetWindowText(hSocks5Edit, cfg->socks5);
+    SetWindowText(hHttpEdit, cfg->http);    
     SetWindowText(hDnsEdit, cfg->dns);
     SetWindowText(hEchEdit, cfg->ech);
 }
@@ -1088,9 +1102,15 @@ void StartProcess() {
     if (strlen(cfg->ech) > 0 && strcmp(cfg->ech, "cloudflare-ech.com") != 0) {
         APPEND_ARG("-ech", cfg->ech);
     }
-    if (strlen(cfg->pyip) > 0) {
-        APPEND_ARG("-pyip", cfg->pyip);
+    if (strlen(cfg->globeproxy) > 0) {
+        APPEND_ARG("-globeproxy", cfg->globeproxy);
     }
+    if (strlen(cfg->socks5) > 0) {
+        APPEND_ARG("-socks5", cfg->socks5);
+    }
+    if (strlen(cfg->http) > 0) {
+        APPEND_ARG("-http", cfg->http);
+    }    
 
     SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
     HANDLE hRead, hWrite;
@@ -1234,7 +1254,9 @@ void SaveConfig() {
         fprintf(f, "ip=%s\n", servers[i].ip);
         fprintf(f, "dns=%s\n", servers[i].dns);
         fprintf(f, "ech=%s\n", servers[i].ech);
-        fprintf(f, "pyip=%s\n\n", servers[i].pyip);
+        fprintf(f, "globeproxy=%s\n\n", servers[i].globeproxy);
+        fprintf(f, "socks5=%s\n\n", servers[i].socks5);
+        fprintf(f, "http=%s\n\n", servers[i].http);        
     }
     
     fclose(f);
@@ -1297,9 +1319,15 @@ void LoadConfig() {
                 strncpy(srv->dns, val, MAX_SMALL_LEN - 1);
             } else if (strcmp(line, "ech") == 0) {
                 strncpy(srv->ech, val, MAX_SMALL_LEN - 1);
-            } else if (strcmp(line, "pyip") == 0) {
-                strncpy(srv->pyip, val, MAX_SMALL_LEN - 1);
+            } else if (strcmp(line, "globeproxy") == 0) {
+                strncpy(srv->globeproxy, val, MAX_SMALL_LEN - 1);
             }
+            } else if (strcmp(line, "socks5") == 0) {
+                strncpy(srv->socks5, val, MAX_SMALL_LEN - 1);
+            }
+            } else if (strcmp(line, "http") == 0) {
+                strncpy(srv->http, val, MAX_SMALL_LEN - 1);
+            }      
         }
     }
     
