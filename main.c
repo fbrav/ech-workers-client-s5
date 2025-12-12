@@ -1321,10 +1321,8 @@ void LoadConfig() {
                 strncpy(srv->ech, val, MAX_SMALL_LEN - 1);
             } else if (strcmp(line, "globeproxy") == 0) {
                 strncpy(srv->globeproxy, val, MAX_SMALL_LEN - 1);
-            }
             } else if (strcmp(line, "socks5") == 0) {
                 strncpy(srv->socks5, val, MAX_SMALL_LEN - 1);
-            }
             } else if (strcmp(line, "http") == 0) {
                 strncpy(srv->http, val, MAX_SMALL_LEN - 1);
             }      
