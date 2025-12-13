@@ -844,7 +844,7 @@ void CreateControls(HWND hwnd) {
     innerY += lineHeight + lineGap;
 
     CreateLabelAndEdit(hwnd, "优选IP(域名):", margin + Scale(15), innerY, halfW, editH, ID_IP_EDIT, &hIpEdit, FALSE);
-    CreateLabelAndEdit(hwnd, "反代IP(域名):", col2X, innerY, halfW, editH, ID_GLOBEPROXY_EDIT, &hGlobeproxyEdit, FALSE);
+    CreateLabelAndEdit(hwnd, "GLOBEPROXY:", col2X, innerY, halfW, editH, ID_GLOBEPROXY_EDIT, &hGlobeproxyEdit, FALSE);
     innerY += lineHeight + lineGap;
 
     CreateLabelAndEdit(hwnd, "SOCKS5:", margin + Scale(15), innerY, halfW, editH, ID_SOCKS5_EDIT, &hSocks5Edit, FALSE);
