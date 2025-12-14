@@ -66,7 +66,7 @@ int Scale(int x) {
 #define ID_IP_EDIT          1007
 #define ID_DNS_EDIT         1008
 #define ID_ECH_EDIT         1009
-#define ID_GLOBEPROXY_EDIT  1010
+#define ID_FALLBACKIP_EDIT  1010
 #define ID_SOCKS5_EDIT     1011
 #define ID_HTTP_EDIT        1012
 #define ID_START_BTN        1013
@@ -78,7 +78,7 @@ int Scale(int x) {
 // 全局变量
 HWND hMainWindow;
 HWND hServerCombo;
-HWND hServerEdit, hListenEdit, hTokenEdit, hIpEdit, hDnsEdit, hEchEdit, hGlobeproxyEdit,hSocks5Edit,hHttpEdit;
+HWND hServerEdit, hListenEdit, hTokenEdit, hIpEdit, hDnsEdit, hEchEdit, hFallbackipEdit,hSocks5Edit,hHttpEdit;
 HWND hStartBtn, hStopBtn, hLogEdit;
 HWND hAutoStartCheck;
 PROCESS_INFORMATION processInfo;
@@ -100,7 +100,7 @@ typedef struct {
     char ip[MAX_SMALL_LEN];      
     char listen[MAX_SMALL_LEN];  
     char token[MAX_URL_LEN];
-    char globeproxy[MAX_SMALL_LEN];
+    char fallbackip[MAX_SMALL_LEN];
     char socks5[MAX_SMALL_LEN];
     char http[MAX_SMALL_LEN];
 } ServerConfig;
@@ -844,7 +844,7 @@ void CreateControls(HWND hwnd) {
     innerY += lineHeight + lineGap;
 
     CreateLabelAndEdit(hwnd, "优选IP(域名):", margin + Scale(15), innerY, halfW, editH, ID_IP_EDIT, &hIpEdit, FALSE);
-    CreateLabelAndEdit(hwnd, "GLOBEPROXY:", col2X, innerY, halfW, editH, ID_GLOBEPROXY_EDIT, &hGlobeproxyEdit, FALSE);
+    CreateLabelAndEdit(hwnd, "FALLBACKIP:", col2X, innerY, halfW, editH, ID_FALLBACKIP_EDIT, &hFallbackipEdit, FALSE);
     innerY += lineHeight + lineGap;
 
     CreateLabelAndEdit(hwnd, "SOCKS5:", margin + Scale(15), innerY, halfW, editH, ID_SOCKS5_EDIT, &hSocks5Edit, FALSE);
@@ -910,7 +910,7 @@ void InitDefaultServer() {
     strcpy(servers[0].ip, "");
     strcpy(servers[0].dns, "");
     strcpy(servers[0].ech, "");
-    strcpy(servers[0].globeproxy, "");
+    strcpy(servers[0].fallbackip, "");
     strcpy(servers[0].socks5, "");
     strcpy(servers[0].http, "");
 }
@@ -1052,7 +1052,7 @@ void GetControlValues() {
 
     GetWindowText(hTokenEdit, cfg->token, sizeof(cfg->token));
     GetWindowText(hIpEdit, cfg->ip, sizeof(cfg->ip));
-    GetWindowText(hGlobeproxyEdit, cfg->globeproxy, sizeof(cfg->globeproxy));
+    GetWindowText(hFallbackipEdit, cfg->fallbackip, sizeof(cfg->fallbackip));
     GetWindowText(hSocks5Edit, cfg->socks5, sizeof(cfg->socks5));
     GetWindowText(hHttpEdit, cfg->http, sizeof(cfg->http));    
     GetWindowText(hDnsEdit, cfg->dns, sizeof(cfg->dns));
@@ -1065,7 +1065,7 @@ void SetControlValues() {
     SetWindowText(hListenEdit, cfg->listen);
     SetWindowText(hTokenEdit, cfg->token);
     SetWindowText(hIpEdit, cfg->ip);
-    SetWindowText(hGlobeproxyEdit, cfg->globeproxy);
+    SetWindowText(hFallbackipEdit, cfg->fallbackip);
     SetWindowText(hSocks5Edit, cfg->socks5);
     SetWindowText(hHttpEdit, cfg->http);    
     SetWindowText(hDnsEdit, cfg->dns);
@@ -1102,8 +1102,8 @@ void StartProcess() {
     if (strlen(cfg->ech) > 0 && strcmp(cfg->ech, "cloudflare-ech.com") != 0) {
         APPEND_ARG("-ech", cfg->ech);
     }
-    if (strlen(cfg->globeproxy) > 0) {
-        APPEND_ARG("-globeproxy", cfg->globeproxy);
+    if (strlen(cfg->fallbackip) > 0) {
+        APPEND_ARG("-fallbackip", cfg->fallbackip);
     }
     if (strlen(cfg->socks5) > 0) {
         APPEND_ARG("-socks5", cfg->socks5);
@@ -1254,7 +1254,7 @@ void SaveConfig() {
         fprintf(f, "ip=%s\n", servers[i].ip);
         fprintf(f, "dns=%s\n", servers[i].dns);
         fprintf(f, "ech=%s\n", servers[i].ech);
-        fprintf(f, "globeproxy=%s\n\n", servers[i].globeproxy);
+        fprintf(f, "fallbackip=%s\n\n", servers[i].fallbackip);
         fprintf(f, "socks5=%s\n\n", servers[i].socks5);
         fprintf(f, "http=%s\n\n", servers[i].http);        
     }
@@ -1319,8 +1319,8 @@ void LoadConfig() {
                 strncpy(srv->dns, val, MAX_SMALL_LEN - 1);
             } else if (strcmp(line, "ech") == 0) {
                 strncpy(srv->ech, val, MAX_SMALL_LEN - 1);
-            } else if (strcmp(line, "globeproxy") == 0) {
-                strncpy(srv->globeproxy, val, MAX_SMALL_LEN - 1);
+            } else if (strcmp(line, "fallbackip") == 0) {
+                strncpy(srv->fallbackip, val, MAX_SMALL_LEN - 1);
             } else if (strcmp(line, "socks5") == 0) {
                 strncpy(srv->socks5, val, MAX_SMALL_LEN - 1);
             } else if (strcmp(line, "http") == 0) {
